@@ -21,6 +21,7 @@ org.springframework.boot.actuate.autoconfigure.endpoint.jmx.JmxEndpointAutoConfi
 org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.env.EnvironmentEndpointAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.flyway.FlywayEndpointAutoConfiguration,\
+org.springframework.boot.actuate.autoconfigure.hazelcast.HazelcastHealthContributorAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.health.HealthContributorAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.health.HealthEndpointAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.health.HealthContributorAutoConfiguration,\
@@ -95,6 +96,7 @@ org.springframework.boot.actuate.autoconfigure.endpoint.web.ServletEndpointManag
 org.springframework.boot.actuate.autoconfigure.endpoint.web.reactive.WebFluxEndpointManagementContextConfiguration,\
 org.springframework.boot.actuate.autoconfigure.endpoint.web.servlet.WebMvcEndpointManagementContextConfiguration,\
 org.springframework.boot.actuate.autoconfigure.endpoint.web.jersey.JerseyWebEndpointManagementContextConfiguration,\
+org.springframework.boot.actuate.autoconfigure.security.servlet.SecurityRequestMatchersManagementContextConfiguration,\
 org.springframework.boot.actuate.autoconfigure.web.jersey.JerseySameManagementContextConfiguration,\
 org.springframework.boot.actuate.autoconfigure.web.jersey.JerseyChildManagementContextConfiguration,\
 org.springframework.boot.actuate.autoconfigure.web.reactive.ReactiveManagementChildContextConfiguration,\

@@ -81,6 +81,7 @@ import static org.mockito.Mockito.verify;
  * @author Stephane Nicoll
  * @author Gary Russell
  * @author HaiTao Zhang
+ * @author Franjo Zilic
  */
 class RabbitAutoConfigurationTests {
 
@@ -99,6 +100,8 @@ class RabbitAutoConfigurationTests {
 			assertThat(messagingTemplate.getRabbitTemplate()).isEqualTo(rabbitTemplate);
 			assertThat(amqpAdmin).isNotNull();
 			assertThat(connectionFactory.getHost()).isEqualTo("localhost");
+			assertThat(getTargetConnectionFactory(context).getRequestedChannelMax())
+					.isEqualTo(com.rabbitmq.client.ConnectionFactory.DEFAULT_CHANNEL_MAX);
 			assertThat(connectionFactory.isPublisherConfirms()).isFalse();
 			assertThat(connectionFactory.isPublisherReturns()).isFalse();
 			assertThat(context.containsBean("rabbitListenerContainerFactory"))
@@ -327,6 +330,30 @@ class RabbitAutoConfigurationTests {
 				"spring.rabbitmq.template.mandatory:false", "spring.rabbitmq.publisher-returns=true").run((context) -> {
 					RabbitTemplate rabbitTemplate = context.getBean(RabbitTemplate.class);
 					assertThat(getMandatory(rabbitTemplate)).isFalse();
+				});
+	}
+
+	@Test
+	void testRabbitTemplateConfigurersIsAvailable() {
+		this.contextRunner.withUserConfiguration(TestConfiguration.class)
+				.run((context) -> assertThat(context).hasSingleBean(RabbitTemplateConfigurer.class));
+	}
+
+	@Test
+	void testRabbitTemplateConfigurerUsesConfig() {
+		this.contextRunner.withUserConfiguration(MessageConvertersConfiguration.class)
+				.withPropertyValues("spring.rabbitmq.template.exchange:my-exchange",
+						"spring.rabbitmq.template.routing-key:my-routing-key",
+						"spring.rabbitmq.template.default-receive-queue:default-queue")
+				.run((context) -> {
+					RabbitTemplateConfigurer configurer = context.getBean(RabbitTemplateConfigurer.class);
+					RabbitTemplate template = mock(RabbitTemplate.class);
+					ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
+					configurer.configure(template, connectionFactory);
+					verify(template).setMessageConverter(context.getBean("myMessageConverter", MessageConverter.class));
+					verify(template).setExchange("my-exchange");
+					verify(template).setRoutingKey("my-routing-key");
+					verify(template).setDefaultReceiveQueue("default-queue");
 				});
 	}
 
@@ -597,6 +624,15 @@ class RabbitAutoConfigurationTests {
 				.withPropertyValues("spring.rabbitmq.requestedHeartbeat:20").run((context) -> {
 					com.rabbitmq.client.ConnectionFactory rabbitConnectionFactory = getTargetConnectionFactory(context);
 					assertThat(rabbitConnectionFactory.getRequestedHeartbeat()).isEqualTo(20);
+				});
+	}
+
+	@Test
+	void customizeRequestedChannelMax() {
+		this.contextRunner.withUserConfiguration(TestConfiguration.class)
+				.withPropertyValues("spring.rabbitmq.requestedChannelMax:12").run((context) -> {
+					com.rabbitmq.client.ConnectionFactory rabbitConnectionFactory = getTargetConnectionFactory(context);
+					assertThat(rabbitConnectionFactory.getRequestedChannelMax()).isEqualTo(12);
 				});
 	}
 

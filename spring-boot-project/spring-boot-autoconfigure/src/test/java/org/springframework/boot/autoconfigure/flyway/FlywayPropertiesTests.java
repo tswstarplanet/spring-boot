@@ -51,6 +51,7 @@ class FlywayPropertiesTests {
 				.isEqualTo(configuration.getLocations());
 		assertThat(properties.getEncoding()).isEqualTo(configuration.getEncoding());
 		assertThat(properties.getConnectRetries()).isEqualTo(configuration.getConnectRetries());
+		assertThat(properties.getDefaultSchema()).isEqualTo(configuration.getDefaultSchema());
 		assertThat(properties.getSchemas()).isEqualTo(Arrays.asList(configuration.getSchemas()));
 		assertThat(properties.getTable()).isEqualTo(configuration.getTable());
 		assertThat(properties.getBaselineDescription()).isEqualTo(configuration.getBaselineDescription());
@@ -96,7 +97,7 @@ class FlywayPropertiesTests {
 		ignoreProperties(properties, "url", "user", "password", "enabled", "checkLocation", "createDataSource");
 
 		// High level object we can't set with properties
-		ignoreProperties(configuration, "classLoader", "dataSource", "resolvers", "callbacks");
+		ignoreProperties(configuration, "callbacks", "classLoader", "dataSource", "javaMigrations", "resolvers");
 		// Properties we don't want to expose
 		ignoreProperties(configuration, "resolversAsClassNames", "callbacksAsClassNames");
 		// Handled by the conversion service
@@ -107,8 +108,6 @@ class FlywayPropertiesTests {
 		ignoreProperties(properties, "initSqls");
 		// Handled as dryRunOutput
 		ignoreProperties(configuration, "dryRunOutputAsFile", "dryRunOutputAsFileName");
-		// Deprecated
-		ignoreProperties(configuration, "errorHandlers", "errorHandlersAsClassNames");
 		List<String> configurationKeys = new ArrayList<>(configuration.keySet());
 		Collections.sort(configurationKeys);
 		List<String> propertiesKeys = new ArrayList<>(properties.keySet());

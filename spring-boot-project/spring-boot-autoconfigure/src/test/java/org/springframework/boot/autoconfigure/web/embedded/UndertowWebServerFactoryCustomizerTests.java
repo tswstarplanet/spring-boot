@@ -110,8 +110,8 @@ class UndertowWebServerFactoryCustomizerTests {
 
 	@Test
 	void customConnectionTimeout() {
-		bind("server.connectionTimeout=100");
-		assertThat(boundServerOption(UndertowOptions.NO_REQUEST_TIMEOUT)).isEqualTo(100);
+		bind("server.undertow.no-request-timeout=1m");
+		assertThat(boundServerOption(UndertowOptions.NO_REQUEST_TIMEOUT)).isEqualTo(60000);
 	}
 
 	@Test
@@ -200,6 +200,23 @@ class UndertowWebServerFactoryCustomizerTests {
 		ConfigurableUndertowWebServerFactory factory = mock(ConfigurableUndertowWebServerFactory.class);
 		this.customizer.customize(factory);
 		verify(factory).setUseForwardHeaders(true);
+	}
+
+	@Test
+	void forwardHeadersWhenStrategyIsNativeShouldConfigureValve() {
+		this.serverProperties.setForwardHeadersStrategy(ServerProperties.ForwardHeadersStrategy.NATIVE);
+		ConfigurableUndertowWebServerFactory factory = mock(ConfigurableUndertowWebServerFactory.class);
+		this.customizer.customize(factory);
+		verify(factory).setUseForwardHeaders(true);
+	}
+
+	@Test
+	void forwardHeadersWhenStrategyIsNoneShouldNotConfigureValve() {
+		this.environment.setProperty("DYNO", "-");
+		this.serverProperties.setForwardHeadersStrategy(ServerProperties.ForwardHeadersStrategy.NONE);
+		ConfigurableUndertowWebServerFactory factory = mock(ConfigurableUndertowWebServerFactory.class);
+		this.customizer.customize(factory);
+		verify(factory).setUseForwardHeaders(false);
 	}
 
 	private <T> T boundServerOption(Option<T> option) {

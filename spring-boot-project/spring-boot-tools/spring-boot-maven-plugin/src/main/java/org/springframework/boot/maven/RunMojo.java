@@ -17,6 +17,7 @@
 package org.springframework.boot.maven;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
@@ -29,11 +30,10 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-import org.springframework.boot.loader.tools.JavaExecutable;
 import org.springframework.boot.loader.tools.RunProcess;
 
 /**
- * Run an executable archive application.
+ * Run an application in place.
  *
  * @author Phillip Webb
  * @author Dmytro Nosan
@@ -59,7 +59,7 @@ public class RunMojo extends AbstractRunMojo {
 	 * Whether the JVM's launch should be optimized.
 	 * @since 2.2.0
 	 */
-	@Parameter(property = "optimizedLaunch", defaultValue = "true")
+	@Parameter(property = "spring-boot.run.optimizedLaunch", defaultValue = "true")
 	private boolean optimizedLaunch;
 
 	@Override
@@ -81,9 +81,20 @@ public class RunMojo extends AbstractRunMojo {
 		RunArguments jvmArguments = super.resolveJvmArguments();
 		if (isFork() && this.optimizedLaunch) {
 			jvmArguments.getArgs().addFirst("-XX:TieredStopAtLevel=1");
-			jvmArguments.getArgs().addFirst("-Xverify:none");
+			if (!isJava13OrLater()) {
+				jvmArguments.getArgs().addFirst("-Xverify:none");
+			}
 		}
 		return jvmArguments;
+	}
+
+	private boolean isJava13OrLater() {
+		for (Method method : String.class.getMethods()) {
+			if (method.getName().equals("stripIndent")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -99,7 +110,7 @@ public class RunMojo extends AbstractRunMojo {
 	private int forkJvm(File workingDirectory, List<String> args, Map<String, String> environmentVariables)
 			throws MojoExecutionException {
 		try {
-			RunProcess runProcess = new RunProcess(workingDirectory, new JavaExecutable().toString());
+			RunProcess runProcess = new RunProcess(workingDirectory, getJavaExecutable());
 			Runtime.getRuntime().addShutdownHook(new Thread(new RunProcessKiller(runProcess)));
 			return runProcess.run(true, args, environmentVariables);
 		}
