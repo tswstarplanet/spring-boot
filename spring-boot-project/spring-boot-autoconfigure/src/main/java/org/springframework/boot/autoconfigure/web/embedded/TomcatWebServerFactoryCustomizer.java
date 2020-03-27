@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,9 +84,10 @@ public class TomcatWebServerFactoryCustomizer
 		propertyMapper.from(tomcatProperties::getBackgroundProcessorDelay).whenNonNull().as(Duration::getSeconds)
 				.as(Long::intValue).to(factory::setBackgroundProcessorDelay);
 		customizeRemoteIpValve(factory);
-		propertyMapper.from(tomcatProperties::getMaxThreads).when(this::isPositive)
-				.to((maxThreads) -> customizeMaxThreads(factory, tomcatProperties.getMaxThreads()));
-		propertyMapper.from(tomcatProperties::getMinSpareThreads).when(this::isPositive)
+		ServerProperties.Tomcat.Threads threadProperties = tomcatProperties.getThreads();
+		propertyMapper.from(threadProperties::getMax).when(this::isPositive)
+				.to((maxThreads) -> customizeMaxThreads(factory, threadProperties.getMax()));
+		propertyMapper.from(threadProperties::getMinSpare).when(this::isPositive)
 				.to((minSpareThreads) -> customizeMinThreads(factory, minSpareThreads));
 		propertyMapper.from(this.serverProperties.getMaxHttpHeaderSize()).whenNonNull().asInt(DataSize::toBytes)
 				.when(this::isPositive)

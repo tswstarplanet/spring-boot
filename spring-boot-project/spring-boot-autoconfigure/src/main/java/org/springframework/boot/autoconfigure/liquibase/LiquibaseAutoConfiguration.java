@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,6 +64,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
  * @author Dominic Gunn
  * @author Dan Zheng
  * @author András Deák
+ * @author Ferenc Gratzer
  * @since 1.1.0
  */
 @Configuration(proxyBeanMethods = false)
@@ -100,6 +101,7 @@ public class LiquibaseAutoConfiguration {
 			SpringLiquibase liquibase = createSpringLiquibase(liquibaseDataSource.getIfAvailable(),
 					dataSource.getIfUnique(), dataSourceProperties);
 			liquibase.setChangeLog(this.properties.getChangeLog());
+			liquibase.setClearCheckSums(this.properties.isClearChecksums());
 			liquibase.setContexts(this.properties.getContexts());
 			liquibase.setDefaultSchema(this.properties.getDefaultSchema());
 			liquibase.setLiquibaseSchema(this.properties.getLiquibaseSchema());
@@ -112,6 +114,7 @@ public class LiquibaseAutoConfiguration {
 			liquibase.setChangeLogParameters(this.properties.getParameters());
 			liquibase.setRollbackFile(this.properties.getRollbackFile());
 			liquibase.setTestRollbackOnUpdate(this.properties.isTestRollbackOnUpdate());
+			liquibase.setTag(this.properties.getTag());
 			return liquibase;
 		}
 

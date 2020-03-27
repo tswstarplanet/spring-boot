@@ -18,8 +18,7 @@ package org.springframework.boot.autoconfigure.data.cassandra;
 
 import java.util.Set;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSessionBuilder;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -32,7 +31,6 @@ import org.springframework.boot.autoconfigure.data.cassandra.city.ReactiveCityRe
 import org.springframework.boot.autoconfigure.data.empty.EmptyDataPackage;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.cassandra.core.mapping.CassandraMappingContext;
@@ -40,7 +38,6 @@ import org.springframework.data.cassandra.repository.config.EnableReactiveCassan
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link CassandraReactiveRepositoriesAutoConfiguration}.
@@ -61,7 +58,7 @@ class CassandraReactiveRepositoriesAutoConfigurationTests {
 	void testDefaultRepositoryConfiguration() {
 		this.contextRunner.withUserConfiguration(DefaultConfiguration.class).run((context) -> {
 			assertThat(context).hasSingleBean(ReactiveCityRepository.class);
-			assertThat(context).hasSingleBean(Cluster.class);
+			assertThat(context).hasSingleBean(CqlSessionBuilder.class);
 			assertThat(getInitialEntitySet(context)).hasSize(1);
 		});
 	}
@@ -69,7 +66,7 @@ class CassandraReactiveRepositoriesAutoConfigurationTests {
 	@Test
 	void testNoRepositoryConfiguration() {
 		this.contextRunner.withUserConfiguration(EmptyConfiguration.class).run((context) -> {
-			assertThat(context).hasSingleBean(Cluster.class);
+			assertThat(context).hasSingleBean(CqlSessionBuilder.class);
 			assertThat(getInitialEntitySet(context)).isEmpty();
 		});
 	}
@@ -103,25 +100,15 @@ class CassandraReactiveRepositoriesAutoConfigurationTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	static class TestConfiguration {
-
-		@Bean
-		Session session() {
-			return mock(Session.class);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
 	@TestAutoConfigurationPackage(EmptyDataPackage.class)
-	@Import(TestConfiguration.class)
+	@Import(CassandraMockConfiguration.class)
 	static class EmptyConfiguration {
 
 	}
 
 	@Configuration(proxyBeanMethods = false)
 	@TestAutoConfigurationPackage(City.class)
-	@Import(TestConfiguration.class)
+	@Import(CassandraMockConfiguration.class)
 	static class DefaultConfiguration {
 
 	}
@@ -129,7 +116,7 @@ class CassandraReactiveRepositoriesAutoConfigurationTests {
 	@Configuration(proxyBeanMethods = false)
 	@TestAutoConfigurationPackage(CassandraReactiveRepositoriesAutoConfigurationTests.class)
 	@EnableReactiveCassandraRepositories(basePackageClasses = ReactiveCityCassandraRepository.class)
-	@Import(TestConfiguration.class)
+	@Import(CassandraMockConfiguration.class)
 	static class CustomizedConfiguration {
 
 	}

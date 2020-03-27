@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,8 +89,9 @@ public class UndertowWebServerFactoryCustomizer
 		PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
 		Undertow properties = this.serverProperties.getUndertow();
 		map.from(properties::getBufferSize).whenNonNull().asInt(DataSize::toBytes).to(factory::setBufferSize);
-		map.from(properties::getIoThreads).to(factory::setIoThreads);
-		map.from(properties::getWorkerThreads).to(factory::setWorkerThreads);
+		ServerProperties.Undertow.Threads threadProperties = properties.getThreads();
+		map.from(threadProperties::getIo).to(factory::setIoThreads);
+		map.from(threadProperties::getWorker).to(factory::setWorkerThreads);
 		map.from(properties::getDirectBuffers).to(factory::setUseDirectBuffers);
 		map.from(properties::getMaxHttpPostSize).as(DataSize::toBytes).when(this::isPositive)
 				.to(options.server(UndertowOptions.MAX_ENTITY_SIZE));

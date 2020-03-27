@@ -19,7 +19,7 @@ package org.springframework.boot.autoconfigure.data.cassandra;
 import java.util.Collections;
 import java.util.Set;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.cassandra.core.CassandraTemplate;
+import org.springframework.data.cassandra.core.convert.CassandraConverter;
 import org.springframework.data.cassandra.core.convert.CassandraCustomConversions;
 import org.springframework.data.cassandra.core.mapping.CassandraMappingContext;
 import org.springframework.data.cassandra.core.mapping.SimpleUserTypeResolver;
@@ -39,7 +40,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.ObjectUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link CassandraDataAutoConfiguration}.
@@ -61,7 +61,7 @@ class CassandraDataAutoConfigurationTests {
 
 	@Test
 	void templateExists() {
-		load(TestConfiguration.class);
+		load(CassandraMockConfiguration.class);
 		assertThat(this.context.getBeanNamesForType(CassandraTemplate.class)).hasSize(1);
 	}
 
@@ -78,9 +78,16 @@ class CassandraDataAutoConfigurationTests {
 	@Test
 	void userTypeResolverShouldBeSet() {
 		load();
-		CassandraMappingContext mappingContext = this.context.getBean(CassandraMappingContext.class);
-		assertThat(ReflectionTestUtils.getField(mappingContext, "userTypeResolver"))
-				.isInstanceOf(SimpleUserTypeResolver.class);
+		CassandraConverter cassandraConverter = this.context.getBean(CassandraConverter.class);
+		assertThat(cassandraConverter).extracting("userTypeResolver").isInstanceOf(SimpleUserTypeResolver.class);
+	}
+
+	@Test
+	void codecRegistryShouldBeSet() {
+		load();
+		CassandraConverter cassandraConverter = this.context.getBean(CassandraConverter.class);
+		assertThat(cassandraConverter.getCodecRegistry())
+				.isSameAs(this.context.getBean(CassandraMockConfiguration.class).codecRegistry);
 	}
 
 	@Test
@@ -95,13 +102,12 @@ class CassandraDataAutoConfigurationTests {
 		load(CustomConversionConfig.class);
 		CassandraTemplate template = this.context.getBean(CassandraTemplate.class);
 		assertThat(template.getConverter().getConversionService().canConvert(Person.class, String.class)).isTrue();
-
 	}
 
 	@Test
 	void clusterDoesNotExist() {
 		this.context = new AnnotationConfigApplicationContext(CassandraDataAutoConfiguration.class);
-		assertThat(this.context.getBeansOfType(Session.class)).isEmpty();
+		assertThat(this.context.getBeansOfType(CqlSession.class)).isEmpty();
 	}
 
 	void load(Class<?>... config) {
@@ -110,19 +116,10 @@ class CassandraDataAutoConfigurationTests {
 		if (!ObjectUtils.isEmpty(config)) {
 			ctx.register(config);
 		}
-		ctx.register(TestConfiguration.class, CassandraAutoConfiguration.class, CassandraDataAutoConfiguration.class);
+		ctx.register(CassandraMockConfiguration.class, CassandraAutoConfiguration.class,
+				CassandraDataAutoConfiguration.class);
 		ctx.refresh();
 		this.context = ctx;
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	static class TestConfiguration {
-
-		@Bean
-		Session getObject() {
-			return mock(Session.class);
-		}
-
 	}
 
 	@Configuration(proxyBeanMethods = false)

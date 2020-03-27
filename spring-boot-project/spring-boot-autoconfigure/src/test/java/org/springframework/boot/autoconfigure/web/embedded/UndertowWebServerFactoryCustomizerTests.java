@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,6 +130,22 @@ class UndertowWebServerFactoryCustomizerTests {
 	void customMaxCookies() {
 		bind("server.undertow.max-cookies=4");
 		assertThat(boundServerOption(UndertowOptions.MAX_COOKIES)).isEqualTo(4);
+	}
+
+	@Test
+	void customizeIoThreads() {
+		bind("server.undertow.threads.io=4");
+		ConfigurableUndertowWebServerFactory factory = mock(ConfigurableUndertowWebServerFactory.class);
+		this.customizer.customize(factory);
+		verify(factory).setIoThreads(4);
+	}
+
+	@Test
+	void customizeWorkerThreads() {
+		bind("server.undertow.threads.worker=10");
+		ConfigurableUndertowWebServerFactory factory = mock(ConfigurableUndertowWebServerFactory.class);
+		this.customizer.customize(factory);
+		verify(factory).setWorkerThreads(10);
 	}
 
 	@Test

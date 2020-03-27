@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,8 @@ import org.springframework.beans.factory.support.BeanDefinitionOverrideException
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.beans.factory.support.DefaultBeanNameGenerator;
+import org.springframework.boot.availability.LivenessStateChangedEvent;
+import org.springframework.boot.availability.ReadinessStateChangedEvent;
 import org.springframework.boot.context.event.ApplicationContextInitializedEvent;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
@@ -408,7 +410,9 @@ class SpringApplicationTests {
 		inOrder.verify(listener).onApplicationEvent(isA(ApplicationPreparedEvent.class));
 		inOrder.verify(listener).onApplicationEvent(isA(ContextRefreshedEvent.class));
 		inOrder.verify(listener).onApplicationEvent(isA(ApplicationStartedEvent.class));
+		inOrder.verify(listener).onApplicationEvent(isA(LivenessStateChangedEvent.class));
 		inOrder.verify(listener).onApplicationEvent(isA(ApplicationReadyEvent.class));
+		inOrder.verify(listener).onApplicationEvent(isA(ReadinessStateChangedEvent.class));
 		inOrder.verifyNoMoreInteractions();
 	}
 
@@ -747,7 +751,7 @@ class SpringApplicationTests {
 	@Test
 	void wildcardSources() {
 		TestSpringApplication application = new TestSpringApplication();
-		application.getSources().add("classpath:org/springframework/boot/sample-${sample.app.test.prop}.xml");
+		application.getSources().add("classpath*:org/springframework/boot/sample-${sample.app.test.prop}.xml");
 		application.setWebApplicationType(WebApplicationType.NONE);
 		this.context = application.run();
 	}
@@ -903,7 +907,7 @@ class SpringApplicationTests {
 		ApplicationListener<ApplicationEvent> listener = this.context.getBean("testApplicationListener",
 				ApplicationListener.class);
 		verifyListenerEvents(listener, ContextRefreshedEvent.class, ApplicationStartedEvent.class,
-				ApplicationReadyEvent.class);
+				LivenessStateChangedEvent.class, ApplicationReadyEvent.class, ReadinessStateChangedEvent.class);
 	}
 
 	@SuppressWarnings("unchecked")

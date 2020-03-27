@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,6 +69,7 @@ import static org.assertj.core.api.Assertions.contentOf;
  * @author Dominic Gunn
  * @author András Deák
  * @author Andrii Hrytsiuk
+ * @author Ferenc Gratzer
  */
 @ExtendWith(OutputCaptureExtension.class)
 class LiquibaseAutoConfigurationTests {
@@ -106,6 +107,7 @@ class LiquibaseAutoConfigurationTests {
 					assertThat(liquibase.getContexts()).isNull();
 					assertThat(liquibase.getDefaultSchema()).isNull();
 					assertThat(liquibase.isDropFirst()).isFalse();
+					assertThat(liquibase.isClearCheckSums()).isFalse();
 				}));
 	}
 
@@ -143,6 +145,7 @@ class LiquibaseAutoConfigurationTests {
 					assertThat(liquibase.getDatabaseChangeLogLockTable())
 							.isEqualTo(properties.getDatabaseChangeLogLockTable());
 					assertThat(liquibase.isDropFirst()).isEqualTo(properties.isDropFirst());
+					assertThat(liquibase.isClearCheckSums()).isEqualTo(properties.isClearChecksums());
 					assertThat(liquibase.isTestRollbackOnUpdate()).isEqualTo(properties.isTestRollbackOnUpdate());
 				}));
 	}
@@ -187,6 +190,13 @@ class LiquibaseAutoConfigurationTests {
 		this.contextRunner.withUserConfiguration(EmbeddedDataSourceConfiguration.class)
 				.withPropertyValues("spring.liquibase.drop-first:true")
 				.run(assertLiquibase((liquibase) -> assertThat(liquibase.isDropFirst()).isTrue()));
+	}
+
+	@Test
+	void overrideClearChecksums() {
+		this.contextRunner.withUserConfiguration(EmbeddedDataSourceConfiguration.class)
+				.withPropertyValues("spring.liquibase.clear-checksums:true")
+				.run(assertLiquibase((liquibase) -> assertThat(liquibase.isClearCheckSums()).isTrue()));
 	}
 
 	@Test
@@ -341,6 +351,13 @@ class LiquibaseAutoConfigurationTests {
 					BeanDefinition beanDefinition = context.getBeanFactory().getBeanDefinition("jdbcTemplate");
 					assertThat(beanDefinition.getDependsOn()).containsExactly("springLiquibase");
 				});
+	}
+
+	@Test
+	void overrideTag() {
+		this.contextRunner.withUserConfiguration(EmbeddedDataSourceConfiguration.class)
+				.withPropertyValues("spring.liquibase.tag:1.0.0")
+				.run(assertLiquibase((liquibase) -> assertThat(liquibase.getTag()).isEqualTo("1.0.0")));
 	}
 
 	private ContextConsumer<AssertableApplicationContext> assertLiquibase(Consumer<SpringLiquibase> consumer) {
